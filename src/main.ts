@@ -5,7 +5,9 @@ import { rateLimit } from 'express-rate-limit';
 import { setupSwagger } from './swagger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: ['error', 'warn', 'log', 'fatal', 'debug', 'verbose'],
+  });
 
   app.use(helmet());
 

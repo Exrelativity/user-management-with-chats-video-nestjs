@@ -39,22 +39,25 @@ export class UserService {
   async findAll(): Promise<User[]> {
     return this.userModel.findAll();
   }
+
   async comparePasswords(
     plainPassword: string,
     hashedPassword: string,
   ): Promise<boolean> {
     return bcrypt.compare(plainPassword, hashedPassword);
   }
+
   async hashPassword(password: string): Promise<string> {
     const saltRounds = 10;
     return bcrypt.hash(password, saltRounds);
   }
-  async findOne(username: string): Promise<User | undefined> {
-    return this.userModel.findOne({ where: { username } });
+
+  async findOneByUsername(username: string): Promise<User | undefined> {
+    return this.userModel.findOne({ where: { username: username } });
   }
 
   async findOneById(id: string): Promise<User | undefined> {
-    return this.userModel.findOne({ where: { id } });
+    return this.userModel.findByPk(id);
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -69,17 +72,17 @@ export class UserService {
 
   async update(id: string, updatedUserDto: UpdateUserDto): Promise<User> {
     const existingUser = await this.userModel.update(updatedUserDto, {
-      where: { id },
+      where: { id: id },
     });
     if (!existingUser) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
-    const updatedUser = this.userModel.findOne({ where: { id } });
+    const updatedUser = this.userModel.findOne({ where: { id: id } });
     return updatedUser;
   }
 
   async delete(id: string): Promise<void> {
-    const userToRemove = await this.userModel.findOne({ where: { id } });
+    const userToRemove = await this.userModel.findOne({ where: { id: id } });
     if (!userToRemove) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }

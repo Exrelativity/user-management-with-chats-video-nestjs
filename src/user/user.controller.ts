@@ -8,13 +8,15 @@ import {
   Delete,
   UseGuards,
   ValidationPipe,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { User } from '../model/user';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiResponse, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiResponse, ApiTags, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 
 @Controller('users')
 @ApiTags('Users')
@@ -22,40 +24,70 @@ import { ApiResponse, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 @ApiBearerAuth()
 export class UserController {
   constructor(private readonly userService: UserService) {}
-
   @Get()
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: 'List of users',
     type: User,
     isArray: true,
   })
   async findAll(): Promise<User[]> {
-    const users = await this.userService.findAll();
-    return users;
+    try {
+      const users = await this.userService.findAll();
+      return users;
+    } catch (error) {
+      throw new HttpException(
+        'Internal server error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Get(':id')
-  @ApiResponse({ status: 200, description: 'User details', type: User })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'User details',
+    type: User,
+  })
   async findOneById(@Param('id') id: string): Promise<User | undefined> {
-    return this.userService.findOneById(id);
+    try {
+      const user = await this.userService.findOneById(id);
+      if (!user) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
+      return user;
+    } catch (error) {
+      throw new HttpException(
+        'Internal server error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Post()
   @ApiResponse({
-    status: 201,
+    status: HttpStatus.CREATED,
     description: 'User created successfully',
     type: User,
   })
   async create(
     @Body(new ValidationPipe()) createUserDto: CreateUserDto,
   ): Promise<User> {
-    return this.userService.create(createUserDto);
+    try {
+      return this.userService.create(createUserDto);
+    } catch (error) {
+      throw new HttpException(
+        'Internal server error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Put(':id')
+  @ApiParam({ name: 'id', description: 'User ID' })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: 'User updated successfully',
     type: User,
   })
@@ -63,12 +95,30 @@ export class UserController {
     @Param('id') id: string,
     @Body(new ValidationPipe()) updatedUserDto: UpdateUserDto,
   ): Promise<User> {
-    return this.userService.update(id, updatedUserDto);
+    try {
+      return this.userService.update(id, updatedUserDto);
+    } catch (error) {
+      throw new HttpException(
+        'Internal server error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Delete(':id')
-  @ApiResponse({ status: 204, description: 'User deleted successfully' })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'User deleted successfully',
+  })
   async delete(@Param('id') id: string): Promise<void> {
-    return this.userService.delete(id);
+    try {
+      await this.userService.delete(id);
+    } catch (error) {
+      throw new HttpException(
+        'Internal server error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

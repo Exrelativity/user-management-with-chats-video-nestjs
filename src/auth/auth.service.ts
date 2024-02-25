@@ -23,7 +23,7 @@ export class AuthService {
     password: string,
   ): Promise<boolean | User> {
     try {
-      const user = await this.userService.findOne(username);
+      const user = await this.userService.findOneByUsername(username);
       if (
         user &&
         (await this.userService.comparePasswords(password, user.password))
@@ -40,6 +40,10 @@ export class AuthService {
 
   validateUserById(id: string): any {
     return this.userService.findOneById(id);
+  }
+
+  validateUserByUsername(username: string): any {
+    return this.userService.findOneByUsername(username);
   }
 
   generateTwoFactorSecret(): string {
@@ -64,7 +68,9 @@ export class AuthService {
   }
 
   async register(createUserDto: CreateUserDto): Promise<any> {
-    const existingUser = await this.userService.findOne(createUserDto.username);
+    const existingUser = await this.userService.findOneByUsername(
+      createUserDto.username,
+    );
     if (existingUser) {
       throw new BadRequestException('Username is already taken');
     }
@@ -113,7 +119,7 @@ export class AuthService {
   }
 
   async requestPasswordReset(email: string): Promise<void> {
-    const user = await this.userService.findOne(email);
+    const user = await this.userService.findOneByUsername(email);
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -127,6 +133,12 @@ export class AuthService {
         token,
         process.env.RESET_PASSWORD_SECRET,
       );
+
+      // Check if the token has expired
+      if (decodedToken.exp && Date.now() >= decodedToken.exp * 1000) {
+        throw new BadRequestException('Reset password token has expired');
+      }
+
       const userId = decodedToken.sub;
       await this.userService.updatePassword(userId, newPassword);
     } catch (error) {
