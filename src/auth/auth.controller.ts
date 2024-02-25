@@ -14,6 +14,8 @@ import { ApiResponse, ApiTags, ApiParam, ApiBody } from '@nestjs/swagger';
 import { LoginUserDto } from './dto/login-user.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto'; // Create a specific DTO for reset password
 import { LocalAuthGuard } from './local-auth.guard';
+import { ResetPasswordValidateDto } from './dto/reset-password-validate.dto';
+import { User } from 'src/model/user';
 
 @Controller('auth')
 @ApiTags('Authentication')
@@ -22,7 +24,10 @@ export class AuthController {
 
   @Post('login')
   @UseGuards(LocalAuthGuard)
-  @ApiResponse({ status: HttpStatus.OK, description: 'Login successful' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Login successful',
+  })
   @ApiBody({ type: LoginUserDto })
   async login(@Body() loginUserDto: LoginUserDto) {
     const userLogin = await this.authService.login(loginUserDto);
@@ -33,6 +38,7 @@ export class AuthController {
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: 'User registered successfully',
+    type: User,
   })
   @ApiBody({ type: CreateUserDto })
   async register(@Body() createUserDto: CreateUserDto) {
@@ -64,8 +70,8 @@ export class AuthController {
     status: HttpStatus.OK,
     description: 'Password reset email sent successfully',
   })
-  @ApiBody({ type: CreateUserDto })
-  async requestPasswordReset(@Body() body: { email: string }) {
+  @ApiBody({ type: ResetPasswordDto })
+  async requestPasswordReset(@Body() body: ResetPasswordDto) {
     await this.authService.requestPasswordReset(body.email);
     return {
       status: HttpStatus.OK,
@@ -79,10 +85,10 @@ export class AuthController {
     description: 'Password reset successfully',
   })
   @ApiParam({ name: 'token', description: 'Reset password token' })
-  @ApiBody({ type: ResetPasswordDto }) // Use a specific DTO for reset password
+  @ApiBody({ type: ResetPasswordValidateDto })
   async resetPassword(
     @Param('token') token: string,
-    @Body() body: ResetPasswordDto,
+    @Body() body: ResetPasswordValidateDto,
   ) {
     try {
       await this.authService.resetPassword(token, body.newPassword);
