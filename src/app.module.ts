@@ -6,6 +6,8 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { User } from './model/user';
+import { ChatModule } from './chat/chat.module';
+import { VideoModule } from './video/video.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { User } from './model/user';
     DatabaseModule,
     AuthModule,
     UserModule,
+    ChatModule,
+    VideoModule,
   ],
   controllers: [AppController],
   providers: [AppService],
